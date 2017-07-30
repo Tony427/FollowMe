@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Hello Threejs</title>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/86/three.min.js"></script>
+        <script src="http://threejs.org/examples/js/loaders/OBJLoader.js"></script>
+        <script
+            src="http://code.jquery.com/jquery-3.2.1.min.js"
+            integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+            crossorigin="anonymous"></script>
+        <!-- <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/86/three.module.js"></script> -->
+        <style>
+            canvas {
+                position: absolute;
+                top: 0;
+                width: 640px !important;
+                height: 480px !important;
+            }
+        </style>
+        <script type="text/javascript">
+        var camera, scene, renderer;
+        var object1;
+        var object2;
+        var startPos;
+        var canvas;
+        var dx = 0, dy = 0;
+        (function(){
+           var clock = new THREE.Clock();
+           var delta = clock.getDelta(); // seconds.
+           var rotateAngle = Math.PI / 2 * delta;   // pi/2 radians (90 degrees) per second
+           var container, stats;
+           var mouseX = 0, mouseY = 0;
+
+           var windowHalfX = window.innerWidth / 2;
+           var windowHalfY = window.innerHeight / 2;
+
+           document.addEventListener('DOMContentLoaded', function() {
+               init();
+               animate();
+               // Grab elements, create settings, etc.
+               var video = document.getElementById('video');
+               // Get access to the camera!
+               if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                   // Not adding `{ audio: true }` since we only want video now
+                   navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
+                       video.src = window.URL.createObjectURL(stream);
+                       video.play();
+                   });
+               }
+
+               canvas = document.getElementsByTagName("canvas")[0];
+           }, false);
+
+           function init() {
+                container = document.createElement( 'div' );
+				var body = document.querySelector("#body");
+                body.appendChild( container );
+
+				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 );
+				camera.position.z = 600;
+				// scene
+				scene = new THREE.Scene();
+				var ambient = new THREE.AmbientLight( 0x101030 );
+				scene.add( ambient );
+
+				var directionalLight = new THREE.DirectionalLight( 0xffeedd );
+				directionalLight.position.set( 0, 0, 1 );
+				scene.add( directionalLight );
+
+
+                var manager = new THREE.LoadingManager();
+				manager.onProgress = function ( item, loaded, total ) {
+					console.log( item, loaded, total );
+				};
+
+                // var texture = new THREE.Texture();
+                // var loader = new THREE.ImageLoader( manager );
+                // loader.load( 'http://localhost:3000/public/images/map.jpg', function ( image ) {
+                //     texture.image = image;
+                //     texture.needsUpdate = true;
+                // });
+
+                var loader = new THREE.OBJLoader( manager );
+				loader.load('/public/obj/location_3d_icon.obj', function ( objects ) {
+                    object1 = objects;
+					object1.traverse( function ( child ) {
+						if ( child instanceof THREE.Mesh ) {
+							//child.material.map = texture;
+						}
+					} )
+                        object1.position.x = 0;
+                        object1.position.y = 0;
+                        object1.rotation.x = 11;
+                        object1.rotation.y = 0;
+                        object1.rotation.z = 0;
+                        object1.scale.x = 3;
+                        object1.scale.y = 3;
+                        object1.scale.z = 3;
+    					scene.add( object1 );
+                });
+
+                var loader = new THREE.OBJLoader( manager );
+				loader.load( '/public/obj/location_3d_down_icon.obj', function ( objects ) {
+                    object2 = objects;
+					object2.traverse( function ( child ) {
+						if ( child instanceof THREE.Mesh ) {
+							//child.material.map = texture;
+						}
+					} )
+                        object2.position.x = 0;
+                        object2.position.y = 0;
+                        object2.rotation.x = 11;
+                        object2.rotation.y = 0;
+                        object2.rotation.z = 0;
+                        object2.scale.x = 3;
+                        object2.scale.y = 3;
+                        object2.scale.z = 3;
+    					scene.add( object2 );
+                });
+
+                renderer = new THREE.WebGLRenderer({ alpha: true });
+				renderer.setSize( window.innerWidth, window.innerHeight );
+                // renderer.setClearColorHex( 0x000000, 1 );
+				container.appendChild( renderer.domElement );
+
+                document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+
+				// document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+                //
+				// window.addEventListener( 'resize', onWindowResize, false );
+
+            }
+
+            function animate() {
+				requestAnimationFrame( animate );
+
+                if(!!startPos) {
+                    render(dx, dy);
+                    // if(Math.floor(startPos.coords.latitude) === 25 && Math.floor(startPos.coords.longitude) === 121)
+                    // {
+                    // // document.getElementById('startLat').innerHTML = startPos.coords.latitude;
+                    // // document.getElementById('startLon').innerHTML = startPos.coords.longitude;
+                    //     render(dx, dy);
+                    //     canvas.hidden = false;
+                    // } else {
+                    //     canvas.hidden = true;
+                    // }
+                }
+                //render();
+			//	render();
+			}
+
+            function onDocumentMouseMove( event ) {
+				mouseX = ( event.clientX - windowHalfX ) / 2;
+				mouseY = ( event.clientY - windowHalfY ) / 2;
+			}
+
+            function render(x, y) {
+                console.log(x+","+y);
+                camera.position.x += ( x - camera.position.x );
+                camera.position.y += ( - y - camera.position.y );
+                //camera.rotation.x = 90 * Math.PI / 180;
+
+                // camera.position.x = x;
+                // camera.position.y = y;
+                // camera.position.x = ( mouseX - camera.position.x ) * .06;
+                // camera.position.y += ( - mouseY - camera.position.y ) * .06;
+                // console.log(camera.position.x);
+                // console.log(camera.position.y);
+                camera.lookAt( scene.position );
+
+                renderer.render( scene, camera );
+            }
+
+            function rotateObj() {
+                if(!!object1 && !!object2) {
+                    object1.rotation.z += 5;
+                    object2.rotation.z += -5;
+                }
+                setTimeout(function(){rotateObj();}, 100);
+            }
+
+            setTimeout(function(){rotateObj();}, 100);
+
+            setTimeout('getPosition()', 1000);
+            getPosition = function() {
+              var geoSuccess = function(position) {
+                startPos = position;
+              };
+              navigator.geolocation.getCurrentPosition(geoSuccess);
+              setTimeout('getPosition()', 1000);
+            };
+
+            function handleOrientation(event) {
+              dx = event.beta;  // In degree in the range [-180,180]
+              dy = event.gamma; // In degree in the range [-90,90]
+            }
+            window.addEventListener('deviceorientation', handleOrientation);
+        })();
+
+        </script>
+    </head>
+    <body id="body">
+        <video id="video" width="640" height="480" autoplay></video>
+    </body>
+</html>
