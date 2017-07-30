@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>KML Click Capture Sample</title>
+    <style>
+      html, body {
+        /* height: 370px; */
+        padding: 0;
+        margin: 0;
+        }
+      #map {
+       height: 360px;
+       /* width: 300px; */
+       width: 48%;
+       overflow: hidden;
+       /* float: left; */
+       /* border: thin solid #333; */
+       }
+      #capture {
+       height: 360px;
+       /* width: 480px; */
+       width: 48%;
+       overflow: hidden;
+       /* float: left; */
+       background-color: #ECECFB;
+       /* border: thin solid #333; */
+       border-left: none;
+       }
+    </style>
+  </head>
+  <body>
+    <div>
+      <ul class="navigation"></ul>
+    </div>
+    <div id="map"></div>
+    <div id="capture"></div>
+    
+    
+    <script
+  src="http://code.jquery.com/jquery-1.12.4.min.js"
+  integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ="
+  crossorigin="anonymous"></script>
+    <script>
+      var map;
+      var src = "https://raw.githubusercontent.com/Tony427/forAngelHackTest/master/%E5%98%89%E7%BE%A9%E7%A7%81%E6%88%BF%E6%99%AF%E9%BB%9E.kml";
+      // var src ="https://raw.githubusercontent.com/Tony427/forAngelHackTest/master/westcampus.kml";
+      // var src = "/南投.kml";
+      // var src = "/westcampus.kml";
+      // var src = 'https://developers.google.com/maps/documentation/javascript/examples/kml/westcampus.kml';
+
+      /**
+       * Initializes the map and calls the function that loads the KML layer.
+       */
+      function initMap() {
+        map = new google.maps.Map(document.getElementById('map'), {
+          center: new google.maps.LatLng(-19.257753, 146.823688),
+          zoom: 2,
+          mapTypeId: 'terrain'
+        });
+        getMarkers(src);
+        loadKmlLayer(src, map);
+        
+      }
+      // https://tony427.github.io/forAngelHackTest/kmlSample.html
+      /**
+       * Adds a KMLLayer based on the URL passed. Clicking on a marker
+       * results in the balloon content being loaded into the right-hand div.
+       * @param {string} src A URL for a KML file.
+       */
+      function loadKmlLayer(src, map) {
+        
+        var kmlLayer = new google.maps.KmlLayer(src, {
+          suppressInfoWindows: true,
+          preserveViewport: false,
+          map: map
+        });
+        google.maps.event.addListener(kmlLayer, 'click', function(event) {
+          var content = event.featureData.infoWindowHtml;
+          var testimonial = document.getElementById('capture');
+          testimonial.innerHTML = content;
+        });
+      }
+
+      function getMarkers(src){
+        var nav = [];
+        $.get(src, function(data){
+            html = "";
+            //loop through placemarks tags
+            $(data).find("Placemark").each(function(index, value){
+                //get coordinates and place name
+                coords = $(this).find("coordinates").text();
+                place = $(this).find("name").text();
+                //store as JSON
+                c = coords.split(",")
+                nav.push({
+                    "place": place,
+                    "lat": c[0],
+                    "lng": c[1]
+                })
+                //output as a navigation
+                html += "<li>" + place + "</li>";
+            })
+            //output as a navigation
+            $(".navigation").append(html);
+
+            //bind clicks on your navigation to scroll to a placemark
+            $(".navigation li").bind("click", function(event){
+                panToPoint = new google.maps.LatLng(nav[$(this).index()].lng, nav[$(this).index()].lat)
+                map.panTo(panToPoint);
+            })
+
+        });
+      }
+    </script>
+    <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD1d2rxabUfKjqSNH6g08eSzogWByjTZBE&callback=initMap">
+    </script>
+  </body>
+</html>
